@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 import { ConfigItem } from '../types';
 import { parseJobLandingFromRequisitos } from '../jobsService';
 import { MapPin, BriefcaseBusiness, ArrowRight, Loader2, CalendarDays, BadgeDollarSign, Share2 } from 'lucide-react';
-import bannerVerde from '../imagens/banner LP - verde.png';
+import banner from '../imagens/banner LP.png';
 
 const PublicJobsBoard: React.FC = () => {
   const [jobs, setJobs] = useState<ConfigItem[]>([]);
@@ -50,7 +50,7 @@ const PublicJobsBoard: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-teal-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
       </div>
     );
   }
@@ -61,18 +61,18 @@ const PublicJobsBoard: React.FC = () => {
 
         {/* Banner LP Verde */}
         <img
-          src={bannerVerde}
-          alt="Carreiras Gigante"
-          className="w-full rounded-[2rem] border border-emerald-700/20 shadow-2xl object-cover mb-8"
+          src={banner}
+          alt="Carreiras Grupo Abucci"
+          className="w-full rounded-[2rem] border border-zinc-800 shadow-2xl object-cover mb-8"
         />
 
         {/* Título e subtítulo */}
-        <div className="rounded-[2rem] text-white border border-emerald-700/40 bg-gradient-to-r from-emerald-500/20 via-emerald-600/30 to-emerald-900/40 backdrop-blur-sm p-5 md:p-7 mb-8">
+        <div className="rounded-[2rem] text-white border border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-950 backdrop-blur-sm p-5 md:p-7 mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <span className="inline-flex bg-[#ffcc00] text-[#072a5a] px-3 py-1 rounded-full text-[10px] font-black uppercase">Carreiras Gigante</span>
-              <h1 className="mt-3 text-3xl md:text-5xl font-black tracking-tighter leading-[0.95] text-[#034b1c]">Vagas Abertas</h1>
-              <p className="text-[#034b1c] mt-3 max-w-2xl font-medium text-sm">
+              <span className="inline-flex bg-[#ffcc00] text-[#072a5a] px-3 py-1 rounded-full text-[10px] font-black uppercase">Carreiras Grupo Abucci</span>
+              <h1 className="mt-3 text-3xl md:text-5xl font-black tracking-tighter leading-[0.95] text-white">Vagas Abertas</h1>
+              <p className="text-gray-300 mt-3 max-w-2xl font-medium text-sm">
                 Explore oportunidades e encontre uma vaga alinhada ao seu momento profissional.
               </p>
             </div>
@@ -96,11 +96,11 @@ const PublicJobsBoard: React.FC = () => {
                 className="group bg-white dark:bg-[#0b1220] rounded-3xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
               >
                 {/* Cabeçalho do card com gradiente */}
-                <div className="bg-gradient-to-r from-emerald-500/15 via-emerald-600/20 to-emerald-900/25 border-b border-emerald-700/20 p-5 md:p-6">
+                <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 border-b border-zinc-800 p-5 md:p-6">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <span className="inline-flex bg-[#ffcc00] text-[#072a5a] px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase">Vaga aberta</span>
-                      <h2 className="mt-2 text-xl md:text-2xl font-black tracking-tight leading-tight text-[#034b1c] dark:text-emerald-300 group-hover:text-[#023015] transition-colors">{landing.title}</h2>
+                      <h2 className="mt-2 text-xl md:text-2xl font-black tracking-tight leading-tight text-white group-hover:text-yellow-400 transition-colors">{landing.title}</h2>
                     </div>
                   </div>
                 </div>

@@ -86,6 +86,12 @@ const AdminDashboard: React.FC = () => {
   const [promptTalents, setPromptTalents] = useState(() => localStorage.getItem('gigante_prompt_talents') || DEFAULT_PROMPT_TALENTS);
   const [promptSaveStatus, setPromptSaveStatus] = useState<'idle' | 'saved'>('idle');
 
+  // Estado da Gestão de Usuários
+  const [settingsSubTab, setSettingsSubTab] = useState<'geral' | 'usuarios'>('geral');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [userMsg, setUserMsg] = useState({ text: '', type: '' });
 
   useEffect(() => {
     fetchData();
@@ -560,6 +566,29 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserEmail || !newUserPassword) return;
+    setCreatingUser(true);
+    setUserMsg({ text: '', type: '' });
+    
+    // Atenção: signUp no Supabase Client-side realiza o login automático do novo usuário.
+    // Em produção, deve-se usar uma chamada para Edge Function com Service Role Key.
+    const { error } = await supabase.auth.signUp({
+      email: newUserEmail,
+      password: newUserPassword,
+    });
+    
+    setCreatingUser(false);
+    if (error) {
+      setUserMsg({ text: error.message, type: 'error' });
+    } else {
+      setUserMsg({ text: 'Usuário cadastrado! Obs: Você pode ter sido desconectado (comportamento padrão do Supabase sem Service Role Key).', type: 'success' });
+      setNewUserEmail('');
+      setNewUserPassword('');
+    }
+  };
+
   const SidebarItem = ({ id, label, icon }: { id: typeof activeTab, label: string, icon: React.ReactNode }) => {
     const isActive = activeTab === id;
     return (
@@ -567,7 +596,7 @@ const AdminDashboard: React.FC = () => {
         onClick={() => setActiveTab(id)}
         className={`w-full flex items-center gap-3 px-6 py-4 transition-all text-sm font-bold tracking-wide uppercase border-l-4 ${
           isActive 
-            ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border-teal-600' 
+            ? 'bg-yellow-50 dark:bg-yellow-800/20 text-yellow-600 dark:text-yellow-400 border-yellow-500' 
             : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 border-transparent hover:border-gray-300 dark:hover:border-gray-700'
         }`}
       >
@@ -584,10 +613,10 @@ const AdminDashboard: React.FC = () => {
       <aside className="w-full md:w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-sm flex flex-col z-10">
         <div className="p-6 border-b border-gray-100 dark:border-gray-800">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-1">
-            <ShieldCheck className="h-3 w-3 text-teal-600" /> Gigante Produtos Médicos
+            <ShieldCheck className="h-3 w-3 text-yellow-500" /> Grupo Abucci
           </p>
           <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">
-            RH <span className="text-teal-600">WORKSPACE</span>
+            RH <span className="text-yellow-500">WORKSPACE</span>
           </h2>
         </div>
         
@@ -615,7 +644,7 @@ const AdminDashboard: React.FC = () => {
               {/* Barra de Filtros de Data */}
               <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-lg">
                 <div className="flex items-center gap-3">
-                   <Calendar className="h-6 w-6 text-teal-600" />
+                   <Calendar className="h-6 w-6 text-yellow-500" />
                    <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight">Filtro de Período</h3>
                 </div>
                 <div className="flex items-center gap-3">
@@ -623,14 +652,14 @@ const AdminDashboard: React.FC = () => {
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-teal-600"
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                   <span className="text-gray-400 font-bold uppercase text-[10px]">até</span>
                   <input 
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-teal-600"
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                   {(startDate || endDate) && (
                     <button onClick={() => {setStartDate(''); setEndDate('');}} className="ml-2 text-[10px] bg-red-100 text-red-600 px-3 py-2 rounded-xl uppercase font-black hover:bg-red-200">
@@ -642,8 +671,8 @@ const AdminDashboard: React.FC = () => {
 
               {/* KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KPICard title="Total de Talentos" value={stats.total} icon={<Users className="text-teal-600 h-6 w-6" />} color="teal" />
-                <KPICard title="Dias de Captação" value={Object.keys(stats.porDia).length} icon={<TrendingUp className="text-teal-600 h-6 w-6" />} color="teal" />
+                <KPICard title="Total de Talentos" value={stats.total} icon={<Users className="text-yellow-500 h-6 w-6" />} color="teal" />
+                <KPICard title="Dias de Captação" value={Object.keys(stats.porDia).length} icon={<TrendingUp className="text-yellow-500 h-6 w-6" />} color="teal" />
                 {/* Outros 2 slots vazios ou de estatisticas futuras */}
               </div>
 
@@ -673,7 +702,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-gray-900 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-lg">
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex items-center gap-3 mr-4">
-                     <Calendar className="h-6 w-6 text-teal-600" />
+                     <Calendar className="h-6 w-6 text-yellow-500" />
                      <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight">Filtros</h3>
                   </div>
                   <select 
@@ -697,14 +726,14 @@ const AdminDashboard: React.FC = () => {
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-teal-600"
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                   <span className="text-gray-400 font-bold uppercase text-[10px]">até</span>
                   <input 
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-teal-600"
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-bold text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-yellow-500"
                   />
                   {(startDate || endDate || filterCity || filterCargo) && (
                     <button onClick={() => {setStartDate(''); setEndDate(''); setFilterCity(''); setFilterCargo('');}} className="ml-2 text-[10px] bg-red-100 text-red-600 px-3 py-2 rounded-xl uppercase font-black hover:bg-red-200">
@@ -727,9 +756,9 @@ const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                     {loading ? (
-                      <tr><td colSpan={5} className="py-20 text-center"><Loader2 className="h-8 w-8 animate-spin text-teal-600 mx-auto" /></td></tr>
+                      <tr><td colSpan={5} className="py-20 text-center"><Loader2 className="h-8 w-8 animate-spin text-yellow-500 mx-auto" /></td></tr>
                     ) : candidatos.map(item => (
-                      <tr key={item.id} className="hover:bg-teal-50/50 dark:hover:bg-teal-900/10 transition-colors group">
+                      <tr key={item.id} className="hover:bg-yellow-50/50 dark:hover:bg-yellow-800/10 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="font-black text-gray-900 dark:text-white uppercase">{item.nome}</div>
                           <div className="text-[10px] text-gray-400 font-bold uppercase">{item.vaga_interesse}</div>
@@ -741,7 +770,7 @@ const AdminDashboard: React.FC = () => {
                         <td className="px-8 py-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">{item.cidade}</td>
                         <td className="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase">{new Date(item.created_at).toLocaleDateString('pt-BR')}</td>
                         <td className="px-8 py-5 text-right">
-                          <button onClick={() => setSelectedResume(item)} className="bg-teal-600 text-white p-2.5 rounded-xl hover:bg-teal-700 transition-all shadow-md active:scale-90">
+                          <button onClick={() => setSelectedResume(item)} className="bg-yellow-500 text-zinc-900 p-2.5 rounded-xl hover:bg-yellow-600 transition-all shadow-md active:scale-90">
                             <Eye className="h-4 w-4" />
                           </button>
                         </td>
@@ -764,7 +793,7 @@ const AdminDashboard: React.FC = () => {
                     <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Pesquisas Internas</h2>
                     <button
                       onClick={() => { resetSurveyForm(); setSurveyView('create'); }}
-                      className="bg-teal-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-sm flex items-center gap-2 hover:bg-teal-700 transition-all shadow-lg active:scale-95"
+                      className="bg-yellow-500 text-zinc-900 px-6 py-3 rounded-2xl font-black uppercase text-sm flex items-center gap-2 hover:bg-yellow-600 transition-all shadow-lg active:scale-95"
                     >
                       <Plus className="h-5 w-5" /> Nova Pesquisa
                     </button>
@@ -772,8 +801,8 @@ const AdminDashboard: React.FC = () => {
 
                   {pesquisas.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 text-center">
-                      <div className="bg-teal-50 dark:bg-teal-900/20 p-6 rounded-full mb-6">
-                        <ClipboardList className="h-16 w-16 text-teal-600" />
+                      <div className="bg-yellow-50 dark:bg-yellow-800/20 p-6 rounded-full mb-6">
+                        <ClipboardList className="h-16 w-16 text-yellow-500" />
                       </div>
                       <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-3">Nenhuma pesquisa criada</h3>
                       <p className="text-gray-500 max-w-md font-medium">Crie sua primeira pesquisa de clima, NPS ou feedback para começar a ouvir seus colaboradores.</p>
@@ -799,7 +828,7 @@ const AdminDashboard: React.FC = () => {
                           {/* Mini Stats Preview */}
                           <div className="grid grid-cols-3 gap-3 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                             <div className="text-center">
-                              <div className="text-2xl font-black text-teal-600">{resCount}</div>
+                              <div className="text-2xl font-black text-yellow-500">{resCount}</div>
                               <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Respostas</div>
                             </div>
                             <div className="text-center border-x border-gray-200 dark:border-gray-700">
@@ -816,10 +845,10 @@ const AdminDashboard: React.FC = () => {
                             <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl">
                               <Link2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
                               <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 truncate flex-grow">{getSurveyUrl(p.id)}</span>
-                              <button onClick={() => copyLink(p.id)} className="flex-shrink-0 p-2 rounded-xl bg-white dark:bg-gray-700 hover:bg-teal-50 dark:hover:bg-teal-900/30 text-gray-400 hover:text-teal-600 transition-all" title="Copiar link">
-                                {copiedLink ? <CheckCheck className="h-4 w-4 text-teal-600" /> : <Copy className="h-4 w-4" />}
+                              <button onClick={() => copyLink(p.id)} className="flex-shrink-0 p-2 rounded-xl bg-white dark:bg-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-800/30 text-gray-400 hover:text-yellow-500 transition-all" title="Copiar link">
+                                {copiedLink ? <CheckCheck className="h-4 w-4 text-yellow-500" /> : <Copy className="h-4 w-4" />}
                               </button>
-                              <button onClick={() => setShareOpenId(shareOpenId === p.id ? null : p.id)} className="flex-shrink-0 p-2 rounded-xl bg-white dark:bg-gray-700 hover:bg-teal-50 dark:hover:bg-teal-900/30 text-gray-400 hover:text-teal-600 transition-all" title="Compartilhar">
+                              <button onClick={() => setShareOpenId(shareOpenId === p.id ? null : p.id)} className="flex-shrink-0 p-2 rounded-xl bg-white dark:bg-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-800/30 text-gray-400 hover:text-yellow-500 transition-all" title="Compartilhar">
                                 <Share2 className="h-4 w-4" />
                               </button>
                             </div>
@@ -849,7 +878,7 @@ const AdminDashboard: React.FC = () => {
                           <div className="flex items-center gap-3 flex-wrap">
                             <button
                               onClick={() => { setSelectedPesquisaResults(p); fetchSurveyResults(p.id); setSurveyView('results'); }}
-                              className="flex-1 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-3 rounded-2xl font-black uppercase text-[11px] hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-teal-900/20 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-2"
+                              className="flex-1 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-3 rounded-2xl font-black uppercase text-[11px] hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-800/20 dark:hover:text-yellow-400 transition-all flex items-center justify-center gap-2"
                             >
                               <BarChart3 className="h-4 w-4" /> Resultados
                             </button>
@@ -873,7 +902,7 @@ const AdminDashboard: React.FC = () => {
               {surveyView === 'create' && (
                 <div className="space-y-8">
                   <div className="flex items-center gap-4">
-                    <button onClick={() => setSurveyView('list')} className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-gray-500 hover:text-teal-600 transition-all">
+                    <button onClick={() => setSurveyView('list')} className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-yellow-100 dark:hover:bg-yellow-800/30 text-gray-500 hover:text-yellow-500 transition-all">
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Nova Pesquisa</h2>
@@ -883,11 +912,11 @@ const AdminDashboard: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Título da Pesquisa *</label>
-                        <input type="text" value={surveyTitle} onChange={e => setSurveyTitle(e.target.value)} placeholder="Ex: Pesquisa de Clima - Maio/2026" className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 outline-none font-bold" />
+                        <input type="text" value={surveyTitle} onChange={e => setSurveyTitle(e.target.value)} placeholder="Ex: Pesquisa de Clima - Maio/2026" className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 outline-none font-bold" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Descrição (Opcional)</label>
-                        <input type="text" value={surveyDesc} onChange={e => setSurveyDesc(e.target.value)} placeholder="Breve descrição para os participantes" className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 outline-none font-bold" />
+                        <input type="text" value={surveyDesc} onChange={e => setSurveyDesc(e.target.value)} placeholder="Breve descrição para os participantes" className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 outline-none font-bold" />
                       </div>
                     </div>
                   </div>
@@ -899,11 +928,11 @@ const AdminDashboard: React.FC = () => {
                         <button onClick={() => removePergunta(perg.id)} className="absolute top-6 right-6 p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button>
                         
                         <div className="flex items-center gap-3 mb-6">
-                          <span className="bg-teal-600 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm">{idx + 1}</span>
+                          <span className="bg-yellow-500 text-zinc-900 w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm">{idx + 1}</span>
                           <select
                             value={perg.tipo}
                             onChange={e => updatePergunta(perg.id, 'tipo', e.target.value)}
-                            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-xs font-black uppercase outline-none text-teal-600"
+                            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-xs font-black uppercase outline-none text-yellow-500"
                           >
                             <option value="texto_curto">Texto Curto</option>
                             <option value="texto_longo">Texto Longo</option>
@@ -911,7 +940,7 @@ const AdminDashboard: React.FC = () => {
                             <option value="nota">Nota (1-5)</option>
                           </select>
                           <label className="flex items-center gap-2 ml-auto text-[10px] font-black text-gray-400 uppercase cursor-pointer">
-                            <input type="checkbox" checked={perg.obrigatoria} onChange={e => updatePergunta(perg.id, 'obrigatoria', e.target.checked)} className="w-4 h-4 rounded text-teal-600 focus:ring-teal-600" />
+                            <input type="checkbox" checked={perg.obrigatoria} onChange={e => updatePergunta(perg.id, 'obrigatoria', e.target.checked)} className="w-4 h-4 rounded text-yellow-500 focus:ring-yellow-500" />
                             Obrigatória
                           </label>
                         </div>
@@ -921,7 +950,7 @@ const AdminDashboard: React.FC = () => {
                           value={perg.enunciado}
                           onChange={e => updatePergunta(perg.id, 'enunciado', e.target.value)}
                           placeholder="Digite a pergunta aqui..."
-                          className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 outline-none font-bold text-lg"
+                          className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 outline-none font-bold text-lg"
                         />
 
                         {perg.tipo === 'multipla_escolha' && (
@@ -940,7 +969,7 @@ const AdminDashboard: React.FC = () => {
                                 <button onClick={() => removeOpcao(perg.id, oIdx)} className="text-gray-300 hover:text-red-500 p-1"><X className="h-4 w-4" /></button>
                               </div>
                             ))}
-                            <button onClick={() => addOpcao(perg.id)} className="text-teal-600 font-black text-xs uppercase flex items-center gap-1 hover:underline"><Plus className="h-4 w-4" /> Adicionar opção</button>
+                            <button onClick={() => addOpcao(perg.id)} className="text-yellow-500 font-black text-xs uppercase flex items-center gap-1 hover:underline"><Plus className="h-4 w-4" /> Adicionar opção</button>
                           </div>
                         )}
 
@@ -956,16 +985,16 @@ const AdminDashboard: React.FC = () => {
 
                   {/* Botões de Adicionar Pergunta */}
                   <div className="flex flex-wrap gap-3">
-                    <button onClick={() => addPergunta('texto_curto')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-teal-600 hover:text-teal-600 transition-all font-black text-xs uppercase">
+                    <button onClick={() => addPergunta('texto_curto')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-yellow-500 hover:text-yellow-500 transition-all font-black text-xs uppercase">
                       <AlignLeft className="h-4 w-4" /> Texto Curto
                     </button>
-                    <button onClick={() => addPergunta('texto_longo')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-teal-600 hover:text-teal-600 transition-all font-black text-xs uppercase">
+                    <button onClick={() => addPergunta('texto_longo')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-yellow-500 hover:text-yellow-500 transition-all font-black text-xs uppercase">
                       <FileText className="h-4 w-4" /> Texto Longo
                     </button>
-                    <button onClick={() => addPergunta('multipla_escolha')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-teal-600 hover:text-teal-600 transition-all font-black text-xs uppercase">
+                    <button onClick={() => addPergunta('multipla_escolha')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-yellow-500 hover:text-yellow-500 transition-all font-black text-xs uppercase">
                       <ListChecks className="h-4 w-4" /> Múltipla Escolha
                     </button>
-                    <button onClick={() => addPergunta('nota')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-teal-600 hover:text-teal-600 transition-all font-black text-xs uppercase">
+                    <button onClick={() => addPergunta('nota')} className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-yellow-500 hover:text-yellow-500 transition-all font-black text-xs uppercase">
                       <Star className="h-4 w-4" /> Nota (1-5)
                     </button>
                   </div>
@@ -985,14 +1014,14 @@ const AdminDashboard: React.FC = () => {
               {surveyView === 'results' && selectedPesquisaResults && (
                 <div className="space-y-8">
                   <div className="flex items-center gap-4">
-                    <button onClick={() => setSurveyView('list')} className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-gray-500 hover:text-teal-600 transition-all">
+                    <button onClick={() => setSurveyView('list')} className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-yellow-100 dark:hover:bg-yellow-800/30 text-gray-500 hover:text-yellow-500 transition-all">
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <div>
                       <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">{selectedPesquisaResults.titulo}</h2>
                       <p className="text-xs font-bold text-gray-400 uppercase">{surveyResults.length} respostas recebidas</p>
                     </div>
-                    <button onClick={() => copyLink(selectedPesquisaResults.id)} className="ml-auto bg-teal-600 text-white px-5 py-3 rounded-2xl font-black uppercase text-xs flex items-center gap-2 hover:bg-teal-700 transition-all shadow-lg">
+                    <button onClick={() => copyLink(selectedPesquisaResults.id)} className="ml-auto bg-yellow-500 text-zinc-900 px-5 py-3 rounded-2xl font-black uppercase text-xs flex items-center gap-2 hover:bg-yellow-600 transition-all shadow-lg">
                       {copiedLink ? <><CheckCheck className="h-4 w-4" /> Copiado!</> : <><Copy className="h-4 w-4" /> Copiar Link</>}
                     </button>
                   </div>
@@ -1010,12 +1039,12 @@ const AdminDashboard: React.FC = () => {
                         return (
                           <div key={perg.id} className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl">
                             <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tight mb-6">
-                              <span className="text-teal-600 mr-2">{idx + 1}.</span>{perg.enunciado}
+                              <span className="text-yellow-500 mr-2">{idx + 1}.</span>{perg.enunciado}
                             </h4>
                             
                             {(perg.tipo === 'nota') && (
                               <div className="space-y-4">
-                                <div className="text-5xl font-black text-teal-600">{(answers.reduce((a: number, b: number) => a + b, 0) / answers.length).toFixed(1)}</div>
+                                <div className="text-5xl font-black text-yellow-500">{(answers.reduce((a: number, b: number) => a + b, 0) / answers.length).toFixed(1)}</div>
                                 <p className="text-xs text-gray-400 font-black uppercase">Média de {answers.length} avaliações</p>
                                 <div className="flex gap-2 mt-4">
                                   {[1,2,3,4,5].map(n => {
@@ -1023,7 +1052,7 @@ const AdminDashboard: React.FC = () => {
                                     return (
                                       <div key={n} className="flex-1 text-center">
                                         <div className="h-24 bg-gray-100 dark:bg-gray-800 rounded-xl relative overflow-hidden">
-                                          <div className="absolute bottom-0 left-0 right-0 bg-teal-600 rounded-xl transition-all" style={{height: `${(count / answers.length) * 100}%`}}></div>
+                                          <div className="absolute bottom-0 left-0 right-0 bg-yellow-500 rounded-xl transition-all" style={{height: `${(count / answers.length) * 100}%`}}></div>
                                         </div>
                                         <span className="text-xs font-black text-gray-500 mt-2 block">{n}★</span>
                                         <span className="text-[10px] font-bold text-gray-400">{count}</span>
@@ -1041,8 +1070,8 @@ const AdminDashboard: React.FC = () => {
                                   const pct = answers.length > 0 ? (count / answers.length) * 100 : 0;
                                   return (
                                     <div key={oIdx}>
-                                      <div className="flex justify-between mb-1"><span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase">{op}</span><span className="text-xs font-black text-teal-600">{count} ({pct.toFixed(0)}%)</span></div>
-                                      <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div className="h-full bg-teal-600 rounded-full transition-all duration-700" style={{width: `${pct}%`}}></div></div>
+                                      <div className="flex justify-between mb-1"><span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase">{op}</span><span className="text-xs font-black text-yellow-500">{count} ({pct.toFixed(0)}%)</span></div>
+                                      <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div className="h-full bg-yellow-500 rounded-full transition-all duration-700" style={{width: `${pct}%`}}></div></div>
                                     </div>
                                   );
                                 })}
@@ -1070,13 +1099,13 @@ const AdminDashboard: React.FC = () => {
           {activeTab === 'ai' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Cabeçalho da IA */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-teal-600 to-emerald-600 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-yellow-500 to-yellow-600 p-8 rounded-[2.5rem] text-zinc-900 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                 <div className="space-y-2 z-10">
                   <h2 className="text-3xl font-black uppercase tracking-tighter flex items-center gap-2">
                     <Brain className="h-8 w-8 text-amber-300 animate-pulse" /> RH Copilot IA
                   </h2>
-                  <p className="text-teal-50 text-sm font-medium max-w-xl">
+                  <p className="text-yellow-50 text-sm font-medium max-w-xl">
                     Utilize inteligência artificial para analisar feedbacks de pesquisas, detectar alertas e sugerir planos de ação ou ranquear candidatos com maior aderência técnica.
                   </p>
                 </div>
@@ -1085,13 +1114,13 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex bg-white/15 p-1.5 rounded-2xl z-10 self-start md:self-center border border-white/10 shrink-0">
                   <button
                     onClick={() => setAiSubTab('surveys')}
-                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${aiSubTab === 'surveys' ? 'bg-white text-teal-800 shadow-md' : 'text-white hover:bg-white/5'}`}
+                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${aiSubTab === 'surveys' ? 'bg-white text-yellow-700 shadow-md' : 'text-white hover:bg-white/5'}`}
                   >
                     Análise de Pesquisas
                   </button>
                   <button
                     onClick={() => setAiSubTab('talents')}
-                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${aiSubTab === 'talents' ? 'bg-white text-teal-800 shadow-md' : 'text-white hover:bg-white/5'}`}
+                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${aiSubTab === 'talents' ? 'bg-white text-yellow-700 shadow-md' : 'text-white hover:bg-white/5'}`}
                   >
                     Triagem de Currículos
                   </button>
@@ -1102,7 +1131,7 @@ const AdminDashboard: React.FC = () => {
               <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 border border-gray-100 dark:border-gray-800 shadow-lg flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
                 <div className="space-y-1">
                   <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight text-sm flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-teal-600" /> Parâmetros do Motor Cognitivo
+                    <Settings className="h-4 w-4 text-yellow-500" /> Parâmetros do Motor Cognitivo
                   </h3>
                   <p className="text-xs text-gray-400 font-bold">Defina o fornecedor e o modelo de processamento de linguagem.</p>
                 </div>
@@ -1111,13 +1140,13 @@ const AdminDashboard: React.FC = () => {
                   <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl border border-gray-200/50 dark:border-gray-700 w-full sm:w-auto">
                     <button
                       onClick={() => setAiProvider('ollama')}
-                      className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${aiProvider === 'ollama' ? 'bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                      className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${aiProvider === 'ollama' ? 'bg-white dark:bg-gray-700 text-yellow-500 dark:text-yellow-400 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                       Ollama (Local VPS)
                     </button>
                     <button
                       onClick={() => setAiProvider('gemini')}
-                      className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${aiProvider === 'gemini' ? 'bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                      className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${aiProvider === 'gemini' ? 'bg-white dark:bg-gray-700 text-yellow-500 dark:text-yellow-400 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                       Google Gemini
                     </button>
@@ -1127,7 +1156,7 @@ const AdminDashboard: React.FC = () => {
                     <select
                       value={ollamaModel}
                       onChange={(e) => setOllamaModel(e.target.value)}
-                      className="px-4 py-2 rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs font-black uppercase outline-none focus:border-teal-600 w-full sm:w-auto cursor-pointer"
+                      className="px-4 py-2 rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs font-black uppercase outline-none focus:border-yellow-500 w-full sm:w-auto cursor-pointer"
                     >
                       <option value="llama3.2:3b">Llama 3.2 (3B)</option>
                       <option value="qwen2.5:1.5b">Qwen 2.5 (1.5B)</option>
@@ -1141,7 +1170,7 @@ const AdminDashboard: React.FC = () => {
                       value={geminiModel}
                       onChange={(e) => setGeminiModel(e.target.value)}
                       disabled={loadingGeminiModels || geminiModels.length === 0}
-                      className="px-4 py-2 rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs font-black uppercase outline-none focus:border-teal-600 w-full sm:w-auto cursor-pointer disabled:opacity-60"
+                      className="px-4 py-2 rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs font-black uppercase outline-none focus:border-yellow-500 w-full sm:w-auto cursor-pointer disabled:opacity-60"
                     >
                       {loadingGeminiModels && <option value={geminiModel}>Carregando modelos...</option>}
                       {!loadingGeminiModels && geminiModels.length === 0 && <option value={geminiModel}>{geminiModel}</option>}
@@ -1179,7 +1208,7 @@ const AdminDashboard: React.FC = () => {
                           setSelectedAiSurveyId(e.target.value);
                           setSurveyAnalysisResult(null);
                         }}
-                        className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 font-bold cursor-pointer"
+                        className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 font-bold cursor-pointer"
                       >
                         <option value="">-- Selecione uma pesquisa --</option>
                         {pesquisas.map((p) => (
@@ -1191,23 +1220,23 @@ const AdminDashboard: React.FC = () => {
                     </div>
 
                     {selectedAiSurveyId && (
-                      <div className="p-5 bg-teal-50/50 dark:bg-teal-950/10 rounded-3xl border border-teal-100/50 dark:border-teal-900/20 space-y-4 animate-in fade-in duration-300">
+                      <div className="p-5 bg-yellow-50/50 dark:bg-yellow-950/10 rounded-3xl border border-yellow-100/50 dark:border-yellow-800/20 space-y-4 animate-in fade-in duration-300">
                         {(() => {
                           const survey = pesquisas.find(p => p.id === selectedAiSurveyId);
                           const count = surveyResponseCounts[selectedAiSurveyId] || 0;
                           return (
                             <>
                               <div className="space-y-1">
-                                <h4 className="font-black text-teal-800 dark:text-teal-400 uppercase text-xs tracking-wider">Metadados da Pesquisa</h4>
+                                <h4 className="font-black text-yellow-700 dark:text-yellow-400 uppercase text-xs tracking-wider">Metadados da Pesquisa</h4>
                                 <p className="text-xs text-gray-500 font-medium">{survey?.descricao || 'Sem descrição cadastrada.'}</p>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl text-center shadow-sm">
-                                  <div className="text-2xl font-black text-teal-600">{count}</div>
+                                  <div className="text-2xl font-black text-yellow-500">{count}</div>
                                   <div className="text-[9px] font-black uppercase text-gray-400">Respostas</div>
                                 </div>
                                 <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl text-center shadow-sm">
-                                  <div className="text-2xl font-black text-teal-600">{survey?.perguntas.length}</div>
+                                  <div className="text-2xl font-black text-yellow-500">{survey?.perguntas.length}</div>
                                   <div className="text-[9px] font-black uppercase text-gray-400">Perguntas</div>
                                 </div>
                               </div>
@@ -1220,7 +1249,7 @@ const AdminDashboard: React.FC = () => {
                     <button
                       onClick={handleAnalyzeSurvey}
                       disabled={analyzingSurvey || !selectedAiSurveyId || (aiProvider === 'gemini' && !geminiKey)}
-                      className="w-full bg-teal-600 hover:bg-teal-700 text-white disabled:bg-gray-150 dark:disabled:bg-gray-800 disabled:text-gray-400 py-4 rounded-2xl font-black uppercase text-xs tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal-600/10"
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-zinc-900 disabled:bg-gray-150 dark:disabled:bg-gray-800 disabled:text-gray-400 py-4 rounded-2xl font-black uppercase text-xs tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/10"
                     >
                       {analyzingSurvey ? (
                         <>
@@ -1239,7 +1268,7 @@ const AdminDashboard: React.FC = () => {
                     {analyzingSurvey && (
                       <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-12 border border-gray-100 dark:border-gray-800 shadow-xl flex flex-col items-center justify-center text-center space-y-6">
                         <div className="relative">
-                          <Brain className="h-20 w-20 text-teal-600 animate-pulse" />
+                          <Brain className="h-20 w-20 text-yellow-500 animate-pulse" />
                           <Sparkles className="h-8 w-8 text-amber-400 absolute top-0 right-0 animate-bounce" />
                         </div>
                         <div className="space-y-2 max-w-md">
@@ -1247,14 +1276,14 @@ const AdminDashboard: React.FC = () => {
                           <p className="text-sm text-gray-500 font-medium">Lendo feedbacks individuais, ponderando média de notas e gerando o plano estratégico de ação...</p>
                         </div>
                         <div className="w-48 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-teal-600 rounded-full animate-[loading_2s_infinite] w-2/3"></div>
+                          <div className="h-full bg-yellow-500 rounded-full animate-[loading_2s_infinite] w-2/3"></div>
                         </div>
                       </div>
                     )}
 
                     {!analyzingSurvey && !surveyAnalysisResult && (
                       <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-16 border border-gray-100 dark:border-gray-800 shadow-xl flex flex-col items-center justify-center text-center space-y-4">
-                        <div className="bg-teal-50 dark:bg-teal-900/15 p-6 rounded-full text-teal-600">
+                        <div className="bg-yellow-50 dark:bg-yellow-800/15 p-6 rounded-full text-yellow-500">
                           <Brain className="h-16 w-16" />
                         </div>
                         <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Relatório de IA Pendente</h3>
@@ -1356,16 +1385,16 @@ const AdminDashboard: React.FC = () => {
 
                         {/* Plano de Ação */}
                         <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl space-y-4">
-                          <h4 className="font-black text-xs text-teal-600 uppercase tracking-widest flex items-center gap-2">
+                          <h4 className="font-black text-xs text-yellow-500 uppercase tracking-widest flex items-center gap-2">
                             <Zap className="h-4 w-4" /> Plano de Ação Recomendado (RH)
                           </h4>
                           <div className="space-y-3">
                             {surveyAnalysisResult.actionPlan.map((action, idx) => (
-                              <div key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-400 transition-all group">
-                                <div className="bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 font-black rounded-lg h-7 w-7 flex items-center justify-center shrink-0 text-xs">
+                              <div key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-all group">
+                                <div className="bg-yellow-50 dark:bg-yellow-800/30 text-yellow-600 dark:text-yellow-400 font-black rounded-lg h-7 w-7 flex items-center justify-center shrink-0 text-xs">
                                   {idx + 1}
                                 </div>
-                                <p className="text-xs font-bold text-gray-700 dark:text-gray-300 pt-1 group-hover:text-teal-900 dark:group-hover:text-white transition-colors">{action}</p>
+                                <p className="text-xs font-bold text-gray-700 dark:text-gray-300 pt-1 group-hover:text-yellow-800 dark:group-hover:text-white transition-colors">{action}</p>
                               </div>
                             ))}
                           </div>
@@ -1389,7 +1418,7 @@ const AdminDashboard: React.FC = () => {
                       <select
                         value={selectedAiCargo}
                         onChange={(e) => handleSelectAiCargo(e.target.value)}
-                        className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 font-bold cursor-pointer"
+                        className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 font-bold cursor-pointer"
                       >
                         <option value="">-- Selecione uma vaga --</option>
                         {cargos.map((c) => (
@@ -1401,9 +1430,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
 
                     {selectedAiCargo && (
-                      <div className="p-5 bg-teal-50/50 dark:bg-teal-950/10 rounded-3xl border border-teal-100/50 dark:border-teal-900/20 space-y-2 animate-in fade-in duration-300">
-                        <h4 className="font-black text-teal-800 dark:text-teal-400 uppercase text-xs tracking-wider">Candidatos Inscritos</h4>
-                        <div className="text-3xl font-black text-teal-600">{matchingTalents.length}</div>
+                      <div className="p-5 bg-yellow-50/50 dark:bg-yellow-950/10 rounded-3xl border border-yellow-100/50 dark:border-yellow-800/20 space-y-2 animate-in fade-in duration-300">
+                        <h4 className="font-black text-yellow-700 dark:text-yellow-400 uppercase text-xs tracking-wider">Candidatos Inscritos</h4>
+                        <div className="text-3xl font-black text-yellow-500">{matchingTalents.length}</div>
                         <p className="text-[10px] font-black uppercase text-gray-400">Currículos cadastrados para esta vaga</p>
                       </div>
                     )}
@@ -1465,7 +1494,7 @@ const AdminDashboard: React.FC = () => {
                                         }`}>
                                           {analysis.recommendation}
                                         </span>
-                                        <div className="bg-teal-50 dark:bg-teal-900/20 px-3.5 py-1.5 rounded-full text-teal-600 dark:text-teal-400 font-black text-xs">
+                                        <div className="bg-yellow-50 dark:bg-yellow-800/20 px-3.5 py-1.5 rounded-full text-yellow-500 dark:text-yellow-400 font-black text-xs">
                                           Score: {analysis.score}%
                                         </div>
                                       </div>
@@ -1474,7 +1503,7 @@ const AdminDashboard: React.FC = () => {
                                     <button
                                       onClick={() => handleAnalyzeTalent(cand)}
                                       disabled={isAnalyzing || (aiProvider === 'gemini' && !geminiKey)}
-                                      className="bg-teal-50 dark:bg-teal-900/20 text-teal-600 hover:bg-teal-100 hover:text-teal-700 dark:hover:bg-teal-900/40 text-xs font-black uppercase px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                                      className="bg-yellow-50 dark:bg-yellow-800/20 text-yellow-500 hover:bg-yellow-100 hover:text-yellow-600 dark:hover:bg-yellow-800/40 text-xs font-black uppercase px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
                                     >
                                       {isAnalyzing ? (
                                         <>
@@ -1504,9 +1533,9 @@ const AdminDashboard: React.FC = () => {
 
                                 {/* Resultado da Triagem Inteligente */}
                                 {analysis && (
-                                  <div className="space-y-4 bg-teal-50/30 dark:bg-teal-950/10 p-5 sm:p-6 rounded-[2rem] border border-teal-100/30 dark:border-teal-900/10 animate-in zoom-in-95 duration-300">
+                                  <div className="space-y-4 bg-yellow-50/30 dark:bg-yellow-950/10 p-5 sm:p-6 rounded-[2rem] border border-yellow-100/30 dark:border-yellow-800/10 animate-in zoom-in-95 duration-300">
                                     <div className="space-y-1">
-                                      <h5 className="font-black text-teal-800 dark:text-teal-400 uppercase text-[10px] tracking-widest flex items-center gap-1"><Brain className="h-3.5 w-3.5"/> Diagnóstico Cognitivo</h5>
+                                      <h5 className="font-black text-yellow-700 dark:text-yellow-400 uppercase text-[10px] tracking-widest flex items-center gap-1"><Brain className="h-3.5 w-3.5"/> Diagnóstico Cognitivo</h5>
                                       <p className="text-gray-700 dark:text-gray-300 text-xs font-semibold leading-relaxed">{analysis.summary}</p>
                                     </div>
 
@@ -1556,13 +1585,13 @@ const AdminDashboard: React.FC = () => {
               <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
                   <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Mural de Vagas</h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mt-1">Cada vaga vira uma LP padrao no estilo Gigante, com "saiba mais" e "candidate-se".</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mt-1">Cada vaga vira uma LP padrao no estilo Grupo Abucci, com "saiba mais" e "candidate-se".</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <button onClick={openCreateJobModal} className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-black uppercase">
+                  <button onClick={openCreateJobModal} className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-zinc-900 px-4 py-2 rounded-xl text-xs font-black uppercase">
                     <Plus className="h-4 w-4" /> Criar nova vaga
                   </button>
-                  <a href="#/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 px-4 py-2 rounded-xl text-xs font-black uppercase">
+                  <a href="#/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-yellow-50 dark:bg-yellow-800/20 text-yellow-600 dark:text-yellow-300 px-4 py-2 rounded-xl text-xs font-black uppercase">
                     <ExternalLink className="h-4 w-4" /> Ver portal publico
                   </a>
                 </div>
@@ -1584,7 +1613,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{landing.shortDescription}</p>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openJobEditor(cargo)} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-black uppercase">Criar/Editar LP</button>
+                        <button onClick={() => openJobEditor(cargo)} className="bg-yellow-500 hover:bg-yellow-600 text-zinc-900 px-4 py-2 rounded-xl text-xs font-black uppercase">Criar/Editar LP</button>
                         {landing.published && (
                           <a href={`#/vagas/${landing.slug}`} target="_blank" rel="noreferrer" className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-xl text-xs font-black uppercase">Saiba mais</a>
                         )}
@@ -1630,7 +1659,7 @@ const AdminDashboard: React.FC = () => {
                       <button onClick={() => setJobEditorOpen(false)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><X className="h-5 w-5" /></button>
                     </div>
 
-                    <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-900/40 rounded-2xl p-4 text-xs font-semibold text-teal-800 dark:text-teal-200">
+                    <div className="bg-yellow-50 dark:bg-yellow-800/20 border border-yellow-100 dark:border-yellow-800/40 rounded-2xl p-4 text-xs font-semibold text-yellow-700 dark:text-yellow-200">
                       Preencha este formulario como uma pagina de evento: titulo forte, descricao curta, conteudo objetivo e CTA para candidatura.
                     </div>
 
@@ -1692,7 +1721,7 @@ const AdminDashboard: React.FC = () => {
 
                     <div className="flex justify-end gap-3">
                       <button onClick={() => setJobEditorOpen(false)} className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-black uppercase">Cancelar</button>
-                      <button onClick={handleSaveJobLanding} disabled={savingJob} className="px-5 py-2 rounded-xl bg-teal-600 text-white text-xs font-black uppercase disabled:opacity-60">{savingJob ? 'Salvando...' : 'Salvar Vaga'}</button>
+                      <button onClick={handleSaveJobLanding} disabled={savingJob} className="px-5 py-2 rounded-xl bg-yellow-500 text-zinc-900 text-xs font-black uppercase disabled:opacity-60">{savingJob ? 'Salvando...' : 'Salvar Vaga'}</button>
                     </div>
                   </div>
                 </div>
@@ -1702,16 +1731,33 @@ const AdminDashboard: React.FC = () => {
 
           {/* Aba: CONFIGURAÇÕES */}
           {activeTab === 'settings' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in slide-in-from-right-4 duration-500">
-              <ConfigCard title="Rede de Cidades" items={cidades} onAdd={() => handleAddItem('cidades')} onDelete={(id) => handleDeleteItem('cidades', id)} newItem={newItem} setNewItem={setNewItem} />
-              <ConfigCard title="Cargos/Vagas" items={cargos} onAdd={() => handleAddItem('cargos')} onDelete={(id) => handleDeleteItem('cargos', id)} newItem={newItem} setNewItem={setNewItem} />
+            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+              
+              {/* Menu de Sub-Abas de Configuração */}
+              <div className="flex items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-2">
+                <button
+                  onClick={() => setSettingsSubTab('geral')}
+                  className={`text-sm font-black uppercase tracking-widest pb-3 px-2 border-b-2 transition-all ${settingsSubTab === 'geral' ? 'border-yellow-500 text-yellow-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                  Configurações Gerais
+                </button>
+                <button
+                  onClick={() => setSettingsSubTab('usuarios')}
+                  className={`text-sm font-black uppercase tracking-widest pb-3 px-2 border-b-2 transition-all ${settingsSubTab === 'usuarios' ? 'border-yellow-500 text-yellow-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                  Gestão de Usuários
+                </button>
+              </div>
+
+              {settingsSubTab === 'geral' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
               {/* Box de Setup da IA */}
               <div className="lg:col-span-2 bg-white dark:bg-gray-900 p-8 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl space-y-6">
                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800">
                    <div className="space-y-1">
                      <h3 className="font-black text-xl text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
-                       <Sparkles className="text-teal-600 h-6 w-6"/> API Keys e Motores de IA
+                       <Sparkles className="text-yellow-500 h-6 w-6"/> API Keys e Motores de IA
                      </h3>
                      <p className="text-sm text-gray-600 dark:text-gray-300">Configure o endereço da sua VPS (Ollama) ou chaves do Gemini para habilitar a aba de Análise.</p>
                    </div>
@@ -1731,7 +1777,7 @@ const AdminDashboard: React.FC = () => {
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-300">Gemini API Key</label>
                         {geminiKey && (
-                          <span className="text-[10px] bg-teal-50 dark:bg-teal-900/30 text-teal-600 px-2 py-0.5 rounded-md font-bold uppercase">Ativa</span>
+                          <span className="text-[10px] bg-yellow-50 dark:bg-yellow-800/30 text-yellow-500 px-2 py-0.5 rounded-md font-bold uppercase">Ativa</span>
                         )}
                       </div>
                       <div className="flex gap-2">
@@ -1740,11 +1786,11 @@ const AdminDashboard: React.FC = () => {
                           value={tempGeminiKey} 
                           onChange={(e) => setTempGeminiKey(e.target.value)} 
                           placeholder="Insira sua chave Gemini API (AIzaSy...)" 
-                           className="flex-1 px-5 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 outline-none focus:border-teal-600 font-bold text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-4 focus:ring-teal-600/10 transition-all text-xs" 
+                           className="flex-1 px-5 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 outline-none focus:border-yellow-500 font-bold text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-4 focus:ring-yellow-500/10 transition-all text-xs" 
                         />
                         <button
                           onClick={() => handleSaveGeminiKey(tempGeminiKey)}
-                          className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-2xl font-black uppercase text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 shrink-0"
+                          className="bg-yellow-500 hover:bg-yellow-600 text-zinc-900 px-6 py-3 rounded-2xl font-black uppercase text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 shrink-0"
                         >
                           <Check className="h-4 w-4" /> Salvar
                         </button>
@@ -1758,7 +1804,7 @@ const AdminDashboard: React.FC = () => {
                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800">
                    <div className="space-y-1">
                      <h3 className="font-black text-xl text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
-                       <Brain className="text-teal-600 h-6 w-6"/> Treinamento & Instruções dos Agentes (Copilot)
+                       <Brain className="text-yellow-500 h-6 w-6"/> Treinamento & Instruções dos Agentes (Copilot)
                      </h3>
                      <p className="text-sm text-gray-600 dark:text-gray-300">Customize o prompt de sistema e as regras de avaliação de cada agente cognitivo de forma independente.</p>
                    </div>
@@ -1772,7 +1818,7 @@ const AdminDashboard: React.FC = () => {
                      </button>
                      <button
                        onClick={handleSavePrompts}
-                       className="bg-teal-600 text-white hover:bg-teal-700 text-xs font-black uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md hover:shadow-lg focus:ring-4 focus:ring-teal-600/20"
+                       className="bg-yellow-500 text-zinc-900 hover:bg-yellow-600 text-xs font-black uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md hover:shadow-lg focus:ring-4 focus:ring-yellow-500/20"
                      >
                        {promptSaveStatus === 'saved' ? (
                          <>
@@ -1792,7 +1838,7 @@ const AdminDashboard: React.FC = () => {
                     <div className="space-y-3 bg-gray-50/80 dark:bg-gray-800/90 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
-                          <div className="bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 p-2 rounded-xl">
+                          <div className="bg-yellow-50 dark:bg-yellow-800/30 text-yellow-500 dark:text-yellow-400 p-2 rounded-xl">
                             <ClipboardList className="h-4 w-4" />
                           </div>
                           <div>
@@ -1808,10 +1854,10 @@ const AdminDashboard: React.FC = () => {
                           value={promptSurveys}
                           onChange={(e) => setPromptSurveys(e.target.value)}
                           placeholder="Digite as diretrizes do agente analista de clima..."
-                          className="w-full px-4 py-3 text-xs rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 outline-none focus:border-teal-600 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 font-semibold focus:ring-4 focus:ring-teal-600/10 transition-all resize-none leading-relaxed"
+                          className="w-full px-4 py-3 text-xs rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 outline-none focus:border-yellow-500 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 font-semibold focus:ring-4 focus:ring-yellow-500/10 transition-all resize-none leading-relaxed"
                         />
                       </div>
-                      <div className="pt-2 text-[10px] font-black text-teal-600 uppercase tracking-wider flex items-center gap-1.5">
+                      <div className="pt-2 text-[10px] font-black text-yellow-500 uppercase tracking-wider flex items-center gap-1.5">
                         <span>💡 O formato de saída JSON da análise é preservado automaticamente</span>
                       </div>
                     </div>
@@ -1820,7 +1866,7 @@ const AdminDashboard: React.FC = () => {
                     <div className="space-y-3 bg-gray-50/80 dark:bg-gray-800/90 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
-                          <div className="bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 p-2 rounded-xl">
+                          <div className="bg-yellow-50 dark:bg-yellow-800/30 text-yellow-500 dark:text-yellow-400 p-2 rounded-xl">
                             <Users className="h-4 w-4" />
                           </div>
                           <div>
@@ -1836,10 +1882,10 @@ const AdminDashboard: React.FC = () => {
                           value={promptTalents}
                           onChange={(e) => setPromptTalents(e.target.value)}
                           placeholder="Digite as diretrizes de triagem técnica e cultural..."
-                          className="w-full px-4 py-3 text-xs rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 outline-none focus:border-teal-600 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 font-semibold focus:ring-4 focus:ring-teal-600/10 transition-all resize-none leading-relaxed"
+                          className="w-full px-4 py-3 text-xs rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 outline-none focus:border-yellow-500 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 font-semibold focus:ring-4 focus:ring-yellow-500/10 transition-all resize-none leading-relaxed"
                         />
                       </div>
-                      <div className="pt-2 text-[10px] font-black text-teal-600 uppercase tracking-wider flex items-center gap-1.5">
+                      <div className="pt-2 text-[10px] font-black text-yellow-500 uppercase tracking-wider flex items-center gap-1.5">
                         <span>💡 O score e os campos de qualificação serão calculados conforme seu prompt</span>
                       </div>
                     </div>
@@ -1848,6 +1894,64 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
 
+          {settingsSubTab === 'usuarios' && (
+            <div className="bg-white dark:bg-gray-900 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl w-full max-w-2xl">
+              <div className="mb-8 border-b border-gray-100 dark:border-gray-800 pb-6">
+                <h3 className="font-black text-xl text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                  <Users className="text-yellow-500 h-6 w-6" /> Adicionar Novo Usuário
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                  Configure acesso ao painel administrativo para novos recrutadores ou gestores.
+                </p>
+              </div>
+
+              <form onSubmit={handleCreateUser} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">E-mail de Acesso</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={newUserEmail}
+                    onChange={e => setNewUserEmail(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 font-bold text-sm dark:text-white"
+                    placeholder="nome@grupoabucci.com.br"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-300">Senha Padrão</label>
+                  <input 
+                    type="password" 
+                    required
+                    minLength={6}
+                    value={newUserPassword}
+                    onChange={e => setNewUserPassword(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 font-bold text-sm dark:text-white"
+                    placeholder="No mínimo 6 caracteres"
+                  />
+                </div>
+
+                {userMsg.text && (
+                  <div className={`p-4 rounded-2xl text-sm font-bold ${userMsg.type === 'error' ? 'bg-red-50 text-red-600 dark:bg-red-900/30' : 'bg-green-50 text-green-600 dark:bg-green-900/30'}`}>
+                    {userMsg.text}
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  disabled={creatingUser}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-zinc-900 font-black uppercase py-4 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {creatingUser ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+                  Cadastrar Usuário
+                </button>
+              </form>
+            </div>
+          )}
+
+        </div>
+      )}
+      
         </div>
       </main>
 
@@ -1857,7 +1961,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white dark:bg-gray-900 rounded-[3rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-gray-100 dark:border-gray-800">
             <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50/30 dark:bg-gray-800/30">
               <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Detalhes do Candidato</h2>
-              <button onClick={() => setSelectedResume(null)} className="p-2 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-teal-600 rounded-full transition-colors">
+              <button onClick={() => setSelectedResume(null)} className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-800/30 text-yellow-500 rounded-full transition-colors">
                 <X className="h-6 w-6" />
               </button>
             </div>
@@ -1868,7 +1972,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="text-4xl font-black text-gray-900 dark:text-white leading-none uppercase tracking-tighter mb-4">{selectedResume.nome}</div>
                   <div className="flex flex-wrap items-center gap-3 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase">
                     <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 tracking-widest"><MapPin className="h-3.5 w-3.5" /> {selectedResume.cidade}</span>
-                    <span className="flex items-center gap-1.5 bg-teal-600 text-white px-3 py-1.5 rounded-xl tracking-widest"><Briefcase className="h-3.5 w-3.5" /> {selectedResume.vaga_interesse}</span>
+                    <span className="flex items-center gap-1.5 bg-yellow-500 text-zinc-900 px-3 py-1.5 rounded-xl tracking-widest"><Briefcase className="h-3.5 w-3.5" /> {selectedResume.vaga_interesse}</span>
                   </div>
                   <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
                     <p><strong>E-mail:</strong> {selectedResume.email}</p>
@@ -1984,9 +2088,9 @@ const HeatmapChart = ({ data, total }: { data: number[], total: number }) => {
   const getColorOpacity = (val: number) => {
     if (val === 0) return 'bg-gray-100 dark:bg-gray-800';
     const intensity = Math.min((val / max) * 100, 100);
-    if (intensity > 75) return 'bg-teal-700';
-    if (intensity > 40) return 'bg-teal-500';
-    return 'bg-teal-300';
+    if (intensity > 75) return 'bg-yellow-600';
+    if (intensity > 40) return 'bg-yellow-400';
+    return 'bg-yellow-300';
   };
 
   return (
@@ -2036,10 +2140,10 @@ const ChartCard = ({ title, data, total }: any) => (
         <div key={label} className="group">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase">{label}</span>
-            <span className="text-xs font-black text-teal-600">{count}</span>
+            <span className="text-xs font-black text-yellow-500">{count}</span>
           </div>
           <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-teal-600 rounded-full transition-all duration-1000" style={{ width: `${(count / total) * 100}%` }}></div>
+            <div className="h-full bg-yellow-500 rounded-full transition-all duration-1000" style={{ width: `${(count / total) * 100}%` }}></div>
           </div>
         </div>
       ))}
@@ -2053,18 +2157,18 @@ const ConfigCard = ({ title, items, onAdd, onDelete, newItem, setNewItem }: any)
     <div className="flex gap-3 mb-8">
       <input 
         type="text" 
-        className="flex-grow px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 font-bold text-sm"
+        className="flex-grow px-5 py-4 rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-gray-800 outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 font-bold text-sm"
         placeholder="Adicionar..."
         value={newItem}
         onChange={e => setNewItem(e.target.value)}
       />
-      <button onClick={onAdd} className="bg-teal-600 text-white p-4 rounded-2xl hover:bg-teal-700 transition-all shadow-lg active:scale-90"><Plus className="h-6 w-6" /></button>
+      <button onClick={onAdd} className="bg-yellow-500 text-zinc-900 p-4 rounded-2xl hover:bg-yellow-600 transition-all shadow-lg active:scale-90"><Plus className="h-6 w-6" /></button>
     </div>
     <div className="overflow-y-auto flex-grow space-y-3 pr-2 custom-scrollbar">
       {items.map((item: ConfigItem) => (
-        <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl group transition-all hover:bg-teal-50 dark:hover:bg-teal-900/10">
+        <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl group transition-all hover:bg-yellow-50 dark:hover:bg-yellow-800/10">
           <span className="font-bold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-tight">{item.nome}</span>
-          <button onClick={() => onDelete(item.id)} className="text-gray-300 hover:text-teal-600 p-2 transition-colors"><Trash2 className="h-4 w-4" /></button>
+          <button onClick={() => onDelete(item.id)} className="text-gray-300 hover:text-yellow-500 p-2 transition-colors"><Trash2 className="h-4 w-4" /></button>
         </div>
       ))}
     </div>

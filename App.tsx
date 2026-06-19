@@ -10,6 +10,7 @@ import Login from './components/Login';
 import { supabase } from './supabase';
 import { User } from '@supabase/supabase-js';
 import { FileText, LogIn, LogOut, LayoutDashboard, Sun, Moon, UserCircle } from 'lucide-react';
+import logoUrl from './imagens/logo_darkmode.png';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -46,7 +47,7 @@ const App: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
       </div>
     );
   }
@@ -64,11 +65,11 @@ const App: React.FC = () => {
             <div className="flex justify-between h-20 items-center">
               <Link to="/" className="flex items-center space-x-2 group h-full">
                 {/* Logo dinâmico baseado no modo escuro */}
-                <div className="h-12 flex items-center">
+                <div className="flex items-center">
                    <img 
-                    src={darkMode ? '/logo_darkmode.png' : '/logo.png'} 
-                    alt="Gigante Produtos Médicos" 
-                    className="h-10 w-auto object-contain"
+                    src={logoUrl} 
+                    alt="Grupo Abucci" 
+                    className="h-14 md:h-16 w-auto object-contain py-1"
                    />
                 </div>
               </Link>
@@ -84,13 +85,13 @@ const App: React.FC = () => {
 
                 {user ? (
                   <div className="flex items-center gap-4">
-                    <Link to="/admin" className="text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors flex items-center gap-1 text-sm font-semibold">
+                    <Link to="/admin" className="text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors flex items-center gap-1 text-sm font-semibold">
                       <LayoutDashboard className="h-4 w-4" />
                       Painel RH
                     </Link>
                     <button 
                       onClick={handleLogout}
-                      className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2"
+                      className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-600 px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2"
                     >
                       <LogOut className="h-4 w-4" />
                       Sair
@@ -99,7 +100,7 @@ const App: React.FC = () => {
                 ) : (
                   <Link 
                     to="/login" 
-                    className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md flex items-center gap-2"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-zinc-900 px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md flex items-center gap-2"
                   >
                     <LogIn className="h-4 w-4" />
                     Entrar (RH)
@@ -128,7 +129,7 @@ const App: React.FC = () => {
         <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} Gigante Produtos Médicos. Brasil.
+              &copy; {new Date().getFullYear()} Grupo Abucci. Brasil.
             </p>
             <div className="flex gap-6">
               <span className="text-xs text-gray-400 uppercase tracking-widest font-bold">Unidades em todo o Brasil</span>

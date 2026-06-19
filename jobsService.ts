@@ -1,5 +1,5 @@
 import { ConfigItem, JobLandingContent } from './types';
-import heroVagasDefault from './imagens/banner_hero_vagas.png';
+import heroVagasDefault from './imagens/banner vagas.png';
 
 const slugify = (value: string) =>
   value

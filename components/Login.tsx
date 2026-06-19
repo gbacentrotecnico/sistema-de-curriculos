@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
-import { Lock, Mail, Loader2, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import logoUrl from '../imagens/logo_darkmode.png';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -32,11 +33,11 @@ const Login: React.FC = () => {
     <div className="min-h-[calc(100vh-160px)] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
         <div className="bg-white dark:bg-gray-900 p-10 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-600/5 rounded-full -mr-16 -mt-16"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -mr-16 -mt-16"></div>
           
           <div className="text-center mb-10 relative">
-            <div className="bg-teal-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3">
-              <ShieldCheck className="h-10 w-10 text-white" />
+            <div className="flex justify-center mb-10">
+               <img src={logoUrl} alt="Grupo Abucci" className="h-24 md:h-28 w-auto object-contain" />
             </div>
             <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white uppercase tracking-tighter">Área do RH</h1>
             <p className="text-gray-500 dark:text-gray-400 font-bold text-xs mt-2 uppercase tracking-widest">Identifique-se para gerenciar o sistema</p>
@@ -57,8 +58,8 @@ const Login: React.FC = () => {
                 <input 
                   required
                   type="email"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 outline-none transition-all font-medium"
-                  placeholder="rh@gigante.com.br"
+                  className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 outline-none transition-all font-medium"
+                  placeholder="rh@grupoabucci.com.br"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                 />
@@ -72,7 +73,7 @@ const Login: React.FC = () => {
                 <input 
                   required
                   type={showPassword ? "text" : "password"}
-                  className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:ring-4 focus:ring-teal-600/10 focus:border-teal-600 outline-none transition-all font-medium"
+                  className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 outline-none transition-all font-medium"
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -80,7 +81,7 @@ const Login: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition-colors p-1"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-500 transition-colors p-1"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -90,14 +91,14 @@ const Login: React.FC = () => {
             <button 
               disabled={loading}
               type="submit"
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-4 rounded-xl font-bold uppercase text-xl shadow-xl hover:shadow-teal-600/20 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-zinc-900 py-4 rounded-xl font-bold uppercase text-xl shadow-xl hover:shadow-yellow-500/20 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
             >
               {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Acessar Painel"}
             </button>
           </form>
 
           <p className="mt-10 text-center text-[10px] text-gray-400 uppercase tracking-widest font-black">
-            Gigante Produtos Médicos &copy; Proteção de Dados de RH
+            Grupo Abucci &copy; Proteção de Dados de RH
           </p>
         </div>
       </div>

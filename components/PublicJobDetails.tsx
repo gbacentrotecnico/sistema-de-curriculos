@@ -13,7 +13,7 @@ const PublicJobDetails: React.FC = () => {
 
   const destinationAddress = 'R. Martins Pena, 93 - Campos Eliseos - Ribeirao Preto - SP - CEP 14080-620';
   const destinationPhone = '+55 (16) 3969-1000';
-  const destinationMail = 'sac@gigante.com.br';
+  const destinationMail = 'sac@grupoabucci.com.br';
 
   useEffect(() => {
     const load = async () => {
@@ -34,14 +34,14 @@ const PublicJobDetails: React.FC = () => {
   }, [slug]);
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-teal-600" /></div>;
+    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-yellow-500" /></div>;
   }
 
   if (!job) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-black text-gray-900 dark:text-white">Vaga não encontrada</h1>
-        <Link to="/" className="mt-6 inline-block bg-teal-600 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs">Voltar para vagas</Link>
+        <Link to="/" className="mt-6 inline-block bg-yellow-500 text-zinc-900 px-5 py-2.5 rounded-xl font-black uppercase text-xs">Voltar para vagas</Link>
       </div>
     );
   }
@@ -110,11 +110,11 @@ const PublicJobDetails: React.FC = () => {
         <section className="mt-4 space-y-4">
           <img src={safeLanding.heroImageUrl} alt={safeLanding.title} className="w-full rounded-[2rem] border border-[#0c3c7a] shadow-2xl object-cover" />
 
-          <div className="rounded-[2rem] text-white border border-emerald-700/40 bg-gradient-to-r from-emerald-500/20 via-emerald-600/30 to-emerald-900/40 backdrop-blur-sm p-5 md:p-7">
+          <div className="rounded-[2rem] text-white border border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-950 backdrop-blur-sm p-5 md:p-7">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
               <div className="lg:col-span-2">
                 <span className="inline-flex bg-[#ffcc00] text-[#072a5a] px-3 py-1 rounded-full text-[10px] font-black uppercase">Vaga aberta</span>
-                <h1 className="mt-3 text-3xl md:text-5xl font-black tracking-tighter leading-[0.95] text-[#034b1c]">{safeLanding.title}</h1>
+                <h1 className="mt-3 text-3xl md:text-5xl font-black tracking-tighter leading-[0.95] text-white">{safeLanding.title}</h1>
               </div>
 
               <div className="bg-white text-[#072a5a] rounded-2xl p-4">
@@ -184,14 +184,14 @@ const PublicJobDetails: React.FC = () => {
 
         <section className="mt-6 bg-white dark:bg-[#0b1220] rounded-3xl border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="text-2xl font-black text-[#072a5a] dark:text-blue-200 flex items-center gap-2"><Building2 className="h-5 w-5" /> Sobre a empresa</h3>
-          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">A Gigante conecta pessoas a oportunidades e impulsiona tecnologia para o setor da saude em todo o Brasil.</p>
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">No Grupo Abucci, valorizamos pessoas, impulsionamos talentos e construímos juntos o melhor em soluções automotivas.</p>
           <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
             <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300"><MapPin className="h-4 w-4 text-[#0a3b8f]" /> {destinationAddress}</p>
             <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300"><Phone className="h-4 w-4 text-[#0a3b8f]" /> {destinationPhone}</p>
             <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300"><Mail className="h-4 w-4 text-[#0a3b8f]" /> {destinationMail}</p>
           </div>
           <button onClick={openDirections} disabled={locating} className="mt-5 inline-flex items-center gap-2 bg-[#0a3b8f] hover:bg-[#072f72] text-white px-5 py-3 rounded-xl text-xs font-black uppercase disabled:opacity-60">
-            <Navigation className="h-4 w-4" /> {locating ? 'Capturando localizacao...' : 'Como chegar na Gigante'}
+            <Navigation className="h-4 w-4" /> {locating ? 'Capturando localizacao...' : 'Como chegar no Grupo Abucci'}
           </button>
         </section>
       </div>
